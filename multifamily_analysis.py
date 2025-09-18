@@ -202,7 +202,7 @@ clusters = dbscan.fit_predict(centroids)
 rooftops_gdf['cluster'] = clusters
 
 clustered_rooftops = rooftops_gdf[rooftops_gdf['cluster'] != -1].copy()
-final_rooftops_minimal = clustered_rooftops[['geometry', 'cluster']].copy()
+final_rooftops_minimal = clustered_rooftops[['ID', 'geometry', 'cluster']].copy()
 final_rooftops_minimal['geometry'] = final_rooftops_minimal.geometry.simplify(tolerance=2, preserve_topology=True)
 final_rooftops_minimal['cluster'] = final_rooftops_minimal['cluster'].astype('int32')
 final_rooftops_minimal.to_file(CLUSTERED_ROOFTOP_PATH_SIMPLIFIED, driver="GPKG")
