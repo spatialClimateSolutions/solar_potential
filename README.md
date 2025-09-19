@@ -27,7 +27,7 @@ https://drive.google.com/drive/folders/1_ncTtJZp6hUCiBmsNqRjZYxZn7POeGBt?usp=sha
 ### Data Sources
 
   * **Impervious Raster**: National Land Cover Database (NLCD) Impervious Surface.
-  * **Multifamily Housing Data (CA)**: Zillow data provided by Yohan. R.
+  * **Multifamily Housing Data (CA)**: Zillow housing data
   * **Microsoft Building Footprints (Global)**: The script uses the most recent global dataset, as the dedicated U.S. dataset is outdated.
   * **California Schools/Colleges (cscd\_2021)**: California School Campus Database.
   * **California Public Lands**: California Protected Areas Database (CPAD) and California Conservation Easement Database (CCED).
