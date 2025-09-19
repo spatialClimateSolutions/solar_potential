@@ -1,4 +1,3 @@
-Of course. Here is the updated `README.md` file, restructured to reflect the new two-step workflow and incorporating all the provided documentation.
 
 -----
 
@@ -21,7 +20,7 @@ The scripts automate the entire workflow, from data acquisition and cleaning to 
 
 All required input data and the final outputs from the scripts can be downloaded from the following link:
 
-**[Download All Required Data and Final Outputs Here](https://www.google.com/search?q=YOUR_GOOGLE_DRIVE_LINK_HERE)**
+**[Download All Required Data and Final Outputs Here]([https://www.google.com/search?q=YOUR_GOOGLE_DRIVE_LINK_HERE](https://drive.google.com/drive/folders/1_ncTtJZp6hUCiBmsNqRjZYxZn7POeGBt?usp=sharing))**
 
 -----
 
