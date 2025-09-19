@@ -7,7 +7,7 @@
 
 This project contains a two-part Python workflow designed to perform a comprehensive geospatial analysis for identifying multifamily housing development potential in California.
 
-1.  **Part 1 (`process_california_final.py`)**: Extracts a complete California building footprint dataset from Microsoft's global tile-based data.
+1.  **Part 1 (`MS_to_CA.py`)**: Extracts a complete California building footprint dataset from Microsoft's global tile-based data.
 2.  **Part 2 (`multifamily_analysis.py`)**: Uses the extracted footprints and other geospatial data to generate two primary outputs:
       * **Ground Layer**: Identifies potentially developable land parcels near existing multifamily housing.
       * **Rooftop Layer**: Identifies and clusters the building footprints of existing multifamily housing.
