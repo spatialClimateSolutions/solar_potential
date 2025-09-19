@@ -44,7 +44,7 @@ This analysis requires running two scripts in sequence. First, you will generate
 
 This initial step prepares the necessary building footprint data for the main analysis.
 
-**Script**: `process_california_final.py`
+**Script**: `MS_to_CA.py`
 
 This script automates the extraction and compilation of building footprint data for California by sourcing it from Microsoft's large-scale global dataset. It identifies the data tiles that overlap with California, downloads them, extracts the building footprints, and merges them into a single file.
 
@@ -58,10 +58,10 @@ This script automates the extraction and compilation of building footprint data 
 
 #### **Running the Script**
 
-1.  **Configure Paths**: Open `process_california_final.py` and verify the file paths in the `Configuration` section.
+1.  **Configure Paths**: Open `MS_to_CA.py` and verify the file paths in the `Configuration` section.
 2.  **Execute**: Run the script from your terminal:
     ```bash
-    python process_california_final.py
+    python MS_to_CA.py
     ```
 
 -----
