@@ -1,74 +1,144 @@
+Of course. Here is the updated `README.md` file, restructured to reflect the new two-step workflow and incorporating all the provided documentation.
+
+-----
+
 # Multifamily Housing Geospatial Analysis
 
 ## Overview
 
-This project contains a Python script (`multifamily_analysis.py`) designed to perform a comprehensive geospatial analysis for identifying multifamily housing development potential. The script processes various geospatial datasets to generate two primary outputs:
+This project contains a two-part Python workflow designed to perform a comprehensive geospatial analysis for identifying multifamily housing development potential in California.
 
-1.  **Ground Layer**: Identifies potentially developable land parcels located near existing multifamily housing units.
-2.  **Rooftop Layer**: Extracts the building footprints of existing multifamily housing structures.
+1.  **Part 1 (`process_california_final.py`)**: Extracts a complete California building footprint dataset from Microsoft's global tile-based data.
+2.  **Part 2 (`multifamily_analysis.py`)**: Uses the extracted footprints and other geospatial data to generate two primary outputs:
+      * **Ground Layer**: Identifies potentially developable land parcels near existing multifamily housing.
+      * **Rooftop Layer**: Identifies and clusters the building footprints of existing multifamily housing.
 
-The script automates the entire workflow, including data loading, cleaning, spatial analysis, layer refinement, and the generation of summary statistics and interactive visualizations.
+The scripts automate the entire workflow, from data acquisition and cleaning to spatial analysis, layer refinement, and the generation of summary statistics and interactive visualizations.
 
-## Features
+-----
 
--   **Data Ingestion**: Loads data from various sources including CSV files, raster images (GeoTIFF), and vector files (Shapefile, GeoPackage).
--   **Area of Interest (AOI) Generation**: Creates a processing AOI by buffering existing multifamily housing locations.
--   **Impervious Surface Analysis**: Vectorizes impervious surfaces from NLCD raster data to identify non-developed areas.
--   **Exclusion Analysis**: Excludes non-developable areas such as existing buildings, schools, and public lands.
--   **Rooftop Identification**: Identifies multifamily building footprints using spatial joins with a comprehensive building footprint dataset.
--   **Data Cleaning & Refinement**:
-    -   Clusters rooftop polygons to identify housing complexes.
-    -   Simplifies geometries to optimize file size and performance.
-    -   Filters small and irrelevant polygons.
--   **Data Aggregation**: Merges final layers with a secondary impervious surface dataset for further refinement.
--   **Summarization**: Aggregates the final ground and rooftop data by census tract and generates a summary CSV file.
--   **Visualization**: Creates interactive choropleth maps in HTML format to visualize the results.
+## Data Download & Sources
 
-## Requirements
+All required input data and the final outputs from the scripts can be downloaded from the following link:
 
-To run this script, you will need Python 3 and the following libraries. You can install them using pip:
+**[Download All Required Data and Final Outputs Here](https://www.google.com/search?q=YOUR_GOOGLE_DRIVE_LINK_HERE)**
 
-```bash
-pip install geopandas pandas rasterio shapely numpy scipy scikit-learn plotly
-```
+-----
 
-## How to Use
+### Data Sources
 
-### 1. Configuration
+  * **Impervious Raster**: National Land Cover Database (NLCD) Impervious Surface.
+  * **Multifamily Housing Data (CA)**: Zillow data provided by Yohan. R.
+  * **Microsoft Building Footprints (Global)**: The script uses the most recent global dataset, as the dedicated U.S. dataset is outdated.
+  * **California Schools/Colleges (cscd\_2021)**: California School Campus Database.
+  * **California Public Lands**: California Protected Areas Database (CPAD) and California Conservation Easement Database (CCED).
+  * **National Resources Inventory (NRI) Data**: Census tract shapefiles and tables.
+  * **Protected Areas Database of the United States (PADUS)**: USGS protected areas data for California.
 
-Before running the script, you must configure the file paths in the `CONFIGURATION` section at the top of `multifamily_analysis.py`. Update the paths to point to the correct locations of your input files and desired output directories.
+-----
 
-**Key Input Files:**
-- `HOUSING_CSV_PATH`: CSV file with housing data, including latitude/longitude and a 'single_or_multi' column.
-- `IMPERVIOUS_RASTER_PATH`: National Land Cover Database (NLCD) impervious surface raster.
-- `ALL_BUILDINGS_PATH`: Comprehensive building footprint data for your region (e.g., Microsoft Building Footprints).
-- `SCHOOLS_GDB_PATH`: Geodatabase containing school property polygons.
-- `PUBLIC_LANDS_CPAD_PATH` & `PUBLIC_LANDS_CCED_PATH`: Shapefiles for public and conserved lands.
-- `CENSUS_TRACTS_PATH`: Shapefile containing census tract boundaries for your area of analysis.
-- `IMPERVIOUS_SURFACE_PATH_2`: A secondary impervious surface raster for final merging.
+## How to Use: A Two-Step Process
 
-### 2. Running the Script
+This analysis requires running two scripts in sequence. First, you will generate the California building footprint data. Second, you will use that data to perform the multifamily housing analysis.
 
-Once the paths are configured, you can execute the script from your terminal:
+### **Step 1: Extract California Building Footprints 🏛️**
+
+This initial step prepares the necessary building footprint data for the main analysis.
+
+**Script**: `process_california_final.py`
+
+This script automates the extraction and compilation of building footprint data for California by sourcing it from Microsoft's large-scale global dataset. It identifies the data tiles that overlap with California, downloads them, extracts the building footprints, and merges them into a single file.
+
+#### **Inputs & Outputs**
+
+  * **Required Inputs**:
+      * `links.csv`: A CSV file containing the download URLs for the global building footprint data tiles. You can get the latest version (called `dataset_links.csv`) from the [Microsoft Building Footprints GitHub](https://github.com/microsoft/GlobalMLBuildingFootprints?tab=readme-ov-file).
+      * `tl_2024_us_state.shp`: A shapefile containing the boundaries of all U.S. states.
+  * **Primary Output**:
+      * `california_building_footprints_complete.gpkg`: A GeoPackage file containing all unique building footprints located within California.
+
+#### **Running the Script**
+
+1.  **Configure Paths**: Open `process_california_final.py` and verify the file paths in the `Configuration` section.
+2.  **Execute**: Run the script from your terminal:
+    ```bash
+    python process_california_final.py
+    ```
+
+-----
+
+### **Step 2: Generate Multifamily Ground and Rooftop Layers**
+
+After generating the California building footprints, you can proceed with the main analysis.
+
+**Script**: `multifamily_analysis.py`
+
+This script takes the building footprints and other datasets to produce the final ground and rooftop layers.
+
+#### **Configuration**
+
+Before running, you must configure the file paths in the `CONFIGURATION` section at the top of `multifamily_analysis.py`.
+
+  * **Crucially, set `ALL_BUILDINGS_PATH` to point to the output from Step 1**:
+    `'california_building_footprints_complete.gpkg'`
+
+#### **Running the Script**
+
+Once the paths are configured, execute the script from your terminal:
 
 ```bash
 python multifamily_analysis.py
 ```
 
-The script will print progress updates to the console as it moves through the various processing steps.
+#### **Analysis Workflow**
 
-## Outputs
+  * **Multifamily Ground Layer Generation**:
 
-The script will generate the following files in the specified output directories:
+      * Identifies potentially developable land near multifamily housing through a multi-stage process of buffering, impervious surface analysis (1-20% imperviousness), and exclusion of institutional lands and existing buildings.
+      * The layer is further refined against a secondary high-resolution impervious raster and cleaned by removing small polygons (\< 100 m²).
 
--   **Optimized Ground Layer**:
-    -   `output_ground_layer/final_multifamily_ground_layer_optimized.gpkg`: A GeoPackage file containing the final, cleaned, and size-optimized polygons of potentially developable land.
+  * **Multifamily Rooftop Layer Generation**:
 
--   **Clustered Rooftop Layer**:
-    -   `output_rooftop_layer/final_multifamily_rooftop_layer_clustered_simplified.gpkg`: A GeoPackage file with the clustered and simplified building footprints of multifamily properties.
+      * Identifies building footprints associated with multifamily housing via a spatial join (`sjoin_nearest`) within a 15-meter radius.
+      * Applies the DBSCAN clustering algorithm (`eps=100m`, `min_samples=5`) to group buildings into dense communities.
 
--   **Summary Data**:
-    -   `final_summary_by_tract.csv`: A CSV file containing aggregated statistics (e.g., total area, polygon count) for both the ground and rooftop layers, summarized by census tract.
+  * **Data Aggregation and Visualization**:
 
--   **Interactive Maps**:
-    -   `interactive_plotly_maps/`: This directory will contain several `.html` files. Each file is an interactive map visualizing a different metric (e.g., 'Number of Rooftop Polygons', 'Total Ground Area') by census tract.
+      * Summarizes the final ground and rooftop polygon counts and areas by census tract, saving the results to a CSV.
+      * Generates interactive Plotly choropleth maps to visualize the results, saved as HTML files.
+
+-----
+
+## Final Outputs
+
+After completing both steps, the following files will be generated:
+
+  * **California Building Footprints**:
+
+      * `california_building_footprints_complete.gpkg`: The comprehensive building footprint dataset for California (from Step 1).
+
+  * **Optimized Ground Layer**:
+
+      * `output_ground_layer/final_multifamily_ground_layer_optimized.gpkg`: A GeoPackage file containing the final, cleaned polygons of potentially developable land.
+
+  * **Clustered Rooftop Layer**:
+
+      * `output_rooftop_layer/final_multifamily_rooftop_layer_clustered_simplified.gpkg`: A GeoPackage file with the clustered and simplified building footprints of multifamily properties.
+
+  * **Summary Data**:
+
+      * `final_summary_by_tract.csv`: A CSV file containing aggregated statistics (total area, polygon count) for both layers, summarized by census tract.
+
+  * **Interactive Maps**:
+
+      * `interactive_plotly_maps/`: A directory containing several `.html` files, each an interactive map visualizing a different metric by census tract.
+
+-----
+
+## Requirements
+
+To run both scripts, you will need Python 3 and the following libraries. You can install them all using pip:
+
+```bash
+pip install geopandas pandas rasterio shapely numpy scipy scikit-learn plotly requests pyquadkey2 fiona
+```
