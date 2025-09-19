@@ -40,7 +40,7 @@ https://drive.google.com/drive/folders/1_ncTtJZp6hUCiBmsNqRjZYxZn7POeGBt?usp=sha
 
 This analysis requires running two scripts in sequence. First, you will generate the California building footprint data. Second, you will use that data to perform the multifamily housing analysis.
 
-### **Step 1: Extract California Building Footprints 🏛️**
+### **Step 1: Extract California Building Footprints**
 
 This initial step prepares the necessary building footprint data for the main analysis.
 
