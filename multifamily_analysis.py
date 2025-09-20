@@ -48,6 +48,7 @@ import gc
 # Update all file paths in this section before running the script.
 print("--- Step 1: Loading Configuration ---")
 
+
 # --- General ---
 CRS = "EPSG:3310"  # California Albers (projected CRS for accurate measurements)
 
@@ -56,8 +57,8 @@ HOUSING_CSV_PATH = "housing_classified_zillow1.csv"
 IMPERVIOUS_RASTER_PATH = "Annual_NLCD_FctImp_2024_CU_C1V1.tif"
 ALL_BUILDINGS_PATH = "california_building_footprints_complete.gpkg"
 SCHOOLS_GDB_PATH = "CSCD_2021.gdb"
-PUBLIC_LANDS_CPAD_PATH = "CPAD_2024b_Units.shp"
-PUBLIC_LANDS_CCED_PATH = "CCED_2024b_Release.shp"
+PUBLIC_LANDS_CPAD_PATH = "cpad_2024b_release/CPAD_2024b_Units.shp"
+PUBLIC_LANDS_CCED_PATH = "cced_2024b_release/CCED_2024b_Release.shp"
 CENSUS_TRACTS_PATH = "tl_2024_06_tract.shp"
 IMPERVIOUS_SURFACE_PATH_2 = "LC24_EVT_250_filtered_flat_points_OPTIMIZED.tif"
 
