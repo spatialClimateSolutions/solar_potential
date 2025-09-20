@@ -59,7 +59,7 @@ ALL_BUILDINGS_PATH = "california_building_footprints_complete.gpkg"
 SCHOOLS_GDB_PATH = "CSCD_2021.gdb"
 PUBLIC_LANDS_CPAD_PATH = "cpad_2024b_release/CPAD_2024b_Units.shp"
 PUBLIC_LANDS_CCED_PATH = "cced_2024b_release/CCED_2024b_Release.shp"
-CENSUS_TRACTS_PATH = "tl_2024_06_tract.shp"
+CENSUS_TRACTS_PATH = "tl_2024_06_tract/tl_2024_06_tract.shptl_2024_06_tract.shp"
 IMPERVIOUS_SURFACE_PATH_2 = "LC24_EVT_250_filtered_flat_points_OPTIMIZED.tif"
 
 # A list of all polygon-based school layers to load and merge
