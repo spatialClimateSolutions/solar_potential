@@ -6,8 +6,7 @@ Description:
     This script automates the acquisition and processing of building footprint
     data for the state of California from a global dataset. It performs the
     following key operations:
-    1.  Pre-processes a list of data URLs, which may require conversion from
-        a rich-text format.
+    1.  Reads a list of data URLs from a standard CSV file.
     2.  Filters the list to identify data tiles relevant to the United States.
     3.  Downloads the relevant compressed GeoJSON-L (.csv.gz) files in parallel
         to maximize efficiency.
@@ -19,8 +18,8 @@ Description:
 
 Inputs:
     - links.csv: A CSV file containing download URLs for the building
-      footprint data. It is expected to contain 'Location' and 'Url' columns.
-      The script is designed to handle a specific malformed RTF-like structure.
+      footprint data. It contains 'Location', 'QuadKey', 'Url', 'Size',
+      and 'UploadDate' columns in standard CSV format.
     - tl_2024_us_state/tl_2024_us_state.shp: A TIGER/Line shapefile of U.S.
       state boundaries, used to define the area of interest for California.
 
@@ -53,7 +52,6 @@ warnings.filterwarnings('ignore', 'GeoSeries.notna', UserWarning)
 # --- File and Directory Paths ---
 # NOTE: Verify these paths before execution.
 URL_SOURCE_FILE = 'links.csv'
-URL_PROCESSED_FILE = 'links_converted.csv'
 SHAPEFILE_DIR = 'tl_2024_us_state'
 SHAPEFILE_NAME = 'tl_2024_us_state.shp'
 DOWNLOAD_DIR = 'building_data_us'
@@ -139,53 +137,6 @@ def process_single_file(task):
 
 
 # --- Main Workflow Functions ---
-
-def preprocess_url_file(source_file, dest_file):
-    """
-    Converts a potentially malformed RTF-like CSV file to a standard CSV format.
-
-    This function is designed to handle a specific format observed in the source
-    data where CSV content is embedded within RTF-style markup.
-
-    Args:
-        source_file (str): Path to the source file (e.g., 'links.csv').
-        dest_file (str): Path to write the cleaned CSV output.
-
-    Returns:
-        bool: True if the conversion is successful or file already exists,
-              False otherwise.
-    """
-    if os.path.exists(dest_file):
-        print(f"Using existing processed URL file: {dest_file}")
-        return True
-
-    print(f"Preprocessing URL file: {source_file} -> {dest_file}")
-    try:
-        with open(source_file, 'r', encoding='utf-8') as f:
-            content = f.read()
-
-        # Use regex to find lines that look like CSV data within the file content.
-        header_pattern = r'^(Location,QuadKey,Url,Size,UploadDate)$'
-        data_pattern = r'^(UnitedStates,[0-9,]+https://\S+\.csv\.gz,[0-9,]+[0-9/]+)$'
-
-        header_match = re.search(header_pattern, content, re.MULTILINE)
-        data_matches = re.findall(data_pattern, content, re.MULTILINE)
-
-        if not header_match or not data_matches:
-            raise ValueError("Could not find expected header or data patterns in source file.")
-
-        with open(dest_file, 'w', encoding='utf-8', newline='') as f:
-            f.write(header_match.group(1) + '\n')
-            for line in data_matches:
-                f.write(line + '\n')
-
-        print(f"Successfully preprocessed {len(data_matches)} data rows.")
-        return True
-
-    except Exception as e:
-        print(f"Error during file preprocessing: {e}")
-        return False
-
 
 def get_california_boundary():
     """
@@ -305,25 +256,25 @@ def main():
     """
     Main function to execute the full data acquisition and processing workflow.
     """
-    if not preprocess_url_file(URL_SOURCE_FILE, URL_PROCESSED_FILE):
-        print("Halting execution due to failure in URL file preprocessing.")
-        return
-
     ca_boundary = get_california_boundary()
     if ca_boundary is None:
         print("Halting execution because the California boundary could not be loaded.")
         return
 
     try:
-        df = pd.read_csv(URL_PROCESSED_FILE)
+        df = pd.read_csv(URL_SOURCE_FILE)
+        
+        # Ensure column names are lowercase and stripped of whitespace
         df.columns = [col.strip().lower() for col in df.columns]
 
         required_cols = {'location', 'url', 'quadkey'}
         if not required_cols.issubset(df.columns):
-            print(f"Error: Processed CSV must contain {required_cols}.")
+            print(f"Error: CSV must contain {required_cols}.")
+            print(f"Available columns: {list(df.columns)}")
             return
 
-        us_mask = df['location'].str.strip().lower() == 'unitedstates'
+        # Filter for United States entries
+        us_mask = df['location'].str.strip().str.lower() == 'unitedstates'
         target_df = df[us_mask].copy()
 
         if target_df.empty:
