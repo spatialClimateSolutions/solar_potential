@@ -211,7 +211,8 @@ print("Exclusion of institutional lands complete.")
 
 # Step 3.4: Exclude Building Buffers
 print("\nStep 3.4: Excluding building footprints...")
-all_buildings = gpd.read_file(ALL_BUILDINGS_PATH).to_crs(CRS)
+all_buildings_original = gpd.read_file(ALL_BUILDINGS_PATH).to_crs(CRS)
+all_buildings = all_buildings_original.copy()
 all_buildings['geometry'] = all_buildings.geometry.buffer(5)
 
 final_ground_layer = ground_layer_intermediate.overlay(
@@ -228,9 +229,9 @@ print("\n--- Step 4: Rooftop Layer Generation ---")
 print("Step 4.1: Identifying intersecting building footprints...")
 
 nearby_buildings = gpd.sjoin_nearest(
-    all_buildings,
+    all_buildings_original,
     multifamily_points[['ID', 'geometry']],
-    max_distance=15,
+    max_distance=25,
     how="inner"
 )
 unique_multifamily_rooftops = nearby_buildings.drop_duplicates(subset=['geometry'])
