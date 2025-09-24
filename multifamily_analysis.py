@@ -250,7 +250,8 @@ rooftops_gdf = gpd.read_file(FINAL_ROOFTOP_LAYER_PATH)
 rooftops_gdf['centroid'] = rooftops_gdf.geometry.centroid
 centroids = np.array(list(rooftops_gdf['centroid'].apply(lambda p: (p.x, p.y))))
 
-dbscan = DBSCAN(eps=100, min_samples=5)
+# Perform DBSCAN clustering
+dbscan = DBSCAN(eps= 30, min_samples = 1)
 clusters = dbscan.fit_predict(centroids)
 rooftops_gdf['cluster'] = clusters
 
