@@ -41,6 +41,8 @@ from scipy.ndimage import binary_opening
 from sklearn.cluster import DBSCAN
 import plotly.express as px
 import gc
+from scipy.sparse.csgraph import connected_components
+from scipy.sparse import csr_matrix
 
 # ===================================================================
 # CELL 2: CONFIGURATION
@@ -59,7 +61,7 @@ ALL_BUILDINGS_PATH = "california_building_footprints_complete.gpkg"
 SCHOOLS_GDB_PATH = "CSCD_2021.gdb"
 PUBLIC_LANDS_CPAD_PATH = "cpad_2024b_release/CPAD_2024b_Units.shp"
 PUBLIC_LANDS_CCED_PATH = "cced_2024b_release/CCED_2024b_Release.shp"
-CENSUS_TRACTS_PATH = "tl_2024_06_tract/tl_2024_06_tract.shptl_2024_06_tract.shp"
+CENSUS_TRACTS_PATH = "tl_2024_06_tract/tl_2024_06_tract.shp"
 IMPERVIOUS_SURFACE_PATH_2 = "LC24_EVT_250_filtered_flat_points_OPTIMIZED.tif"
 
 # A list of all polygon-based school layers to load and merge
@@ -116,6 +118,18 @@ if 'ID' not in multifamily_df.columns:
 multifamily_points = gpd.GeoDataFrame(
     multifamily_df,
     geometry=gpd.points_from_xy(multifamily_df.lon, multifamily_df.lat),
+    crs="EPSG:4326"
+).to_crs(CRS)
+
+
+singlefamily_df = housing_df[housing_df['single_or_multi'].str.strip() == 'Single'].copy()
+singlefamily_df['lon'] = pd.to_numeric(singlefamily_df['lon'], errors='coerce')
+singlefamily_df['lat'] = pd.to_numeric(singlefamily_df['lat'], errors='coerce')
+singlefamily_df.dropna(subset=['lon', 'lat'], inplace=True)
+
+singlefamily_points = gpd.GeoDataFrame(
+    singlefamily_df,
+    geometry=gpd.points_from_xy(singlefamily_df.lon, singlefamily_df.lat),
     crs="EPSG:4326"
 ).to_crs(CRS)
 
@@ -228,10 +242,25 @@ print(f"--- Initial Ground Layer saved to: {FINAL_GROUND_LAYER_PATH} ---")
 print("\n--- Step 4: Rooftop Layer Generation ---")
 print("Step 4.1: Identifying intersecting building footprints...")
 
+
+intersecting = gpd.sjoin(all_buildings_original, multifamily_points, how="inner", predicate="intersects")
+remaining_buildings = all_buildings_original[~all_buildings_original.index.isin(intersecting.index)]
+
+# Identify intersecting polygons
 nearby_buildings = gpd.sjoin_nearest(
-    all_buildings_original,
+    remaining_buildings,
+    singlefamily_points,
+    max_distance=30,
+    how="inner"
+)
+
+# Filter out intersecting polygons from the original GeoDataFrame
+remaining_buildings = all_buildings_original[~all_buildings_original.index.isin(nearby_buildings.index)]
+
+nearby_buildings = gpd.sjoin_nearest(
+    remaining_buildings,
     multifamily_points[['ID', 'geometry']],
-    max_distance=25,
+    max_distance=100,
     how="inner"
 )
 unique_multifamily_rooftops = nearby_buildings.drop_duplicates(subset=['geometry'])
@@ -246,16 +275,45 @@ print("\n--- Step 5: Refining and Cleaning Layers ---")
 
 # Step 5.1: Cluster and Simplify Rooftop Layer
 print("Step 5.1: Clustering and simplifying rooftop layer...")
-rooftops_gdf = gpd.read_file(FINAL_ROOFTOP_LAYER_PATH)
-rooftops_gdf['centroid'] = rooftops_gdf.geometry.centroid
-centroids = np.array(list(rooftops_gdf['centroid'].apply(lambda p: (p.x, p.y))))
+rooftops_gdf = gpd.read_file(FINAL_ROOFTOP_LAYER_PATH)[['ID', 'geometry']]
+# rooftops_gdf['centroid'] = rooftops_gdf.geometry.centroid
+# centroids = np.array(list(rooftops_gdf['centroid'].apply(lambda p: (p.x, p.y))))
 
-# Perform DBSCAN clustering
-dbscan = DBSCAN(eps= 30, min_samples = 1)
-clusters = dbscan.fit_predict(centroids)
-rooftops_gdf['cluster'] = clusters
+# # Perform DBSCAN clustering
+# dbscan = DBSCAN(eps= 60, min_samples = 1)
+# clusters = dbscan.fit_predict(centroids)
+# rooftops_gdf['cluster'] = clusters
+# clustered_rooftops = rooftops_gdf[rooftops_gdf['cluster'] != -1].copy()
 
-clustered_rooftops = rooftops_gdf[rooftops_gdf['cluster'] != -1].copy()
+
+
+# --- Revised Clustering Code ---
+# 1. Buffer the geometries
+# We use half the desired distance (eps/2) because if two polygons are `eps` apart,
+# their buffers of `eps/2` will touch.
+rooftops_gdf['unique_id'] = range(len(rooftops_gdf))
+buffer_distance = 12
+buffered_rooftops = rooftops_gdf.copy()
+buffered_rooftops['geometry'] = rooftops_gdf.geometry.buffer(buffer_distance)
+
+# 2. Find intersecting neighbors using a spatial join
+# This creates a DataFrame of all pairs of polygons whose buffers touch.
+intersecting_pairs = gpd.sjoin(buffered_rooftops, buffered_rooftops, how="inner", predicate="intersects")
+
+# 3. Build the graph representation from the pairs
+# Filter out self-intersections and create a list of edges
+edges = intersecting_pairs[intersecting_pairs.unique_id_left != intersecting_pairs.unique_id_right]
+graph = edges[['unique_id_left', 'unique_id_right']].values
+
+# 4. Find the connected components (the clusters)
+n_polygons = len(rooftops_gdf)
+adj_matrix = csr_matrix((np.ones(len(graph)), (graph[:, 0], graph[:, 1])), shape=(n_polygons, n_polygons))
+
+n_components, labels = connected_components(csgraph=adj_matrix, directed=False, return_labels=True)
+
+# Assign the cluster labels back to the original GeoDataFrame
+rooftops_gdf['cluster'] = labels
+clustered_rooftops = rooftops_gdf.copy().drop(columns=['unique_id'])
 
 # Ensure 'ID' is in the dataframe before selection
 if 'ID' not in clustered_rooftops.columns:
